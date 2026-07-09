@@ -1,5 +1,5 @@
-import { CookingPotIcon } from "../icons/Icons.jsx";
 import SuggestionButton from "./SuggestionButton.jsx";
+import { FoodPlateIcon } from "../icons/Icons.jsx";
 
 function EmptyChat({ onPick }) {
   const suggestions = [
@@ -10,20 +10,20 @@ function EmptyChat({ onPick }) {
   ];
 
   return (
-    <div className="emptyChat">
-      <div className="emptyChat-icon">
-        <CookingPotIcon />
+    <div className="emptychat">
+      <div className="emptychat-icon">
+        <FoodPlateIcon />
       </div>
-      <div className="emptyChat-header">
+      <div className="emptychat-header">
         <h1>Jakie masz składniki?</h1>
       </div>
-      <div className="emptyChat-text">
+      <div className="emptychat-text">
         <p>
           Napisz jakie składniki masz, a ja spróbuje zaproponować Ci co możesz z
           nich upichcić!
         </p>
       </div>
-      <div className="emptyChat-suggestions">
+      <div className="emptychat-suggestions">
         {suggestions.map((text) => (
           <SuggestionButton key={text} text={text} onClick={onPick} />
         ))}

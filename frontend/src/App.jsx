@@ -29,17 +29,16 @@ function App() {
   }
 
   return (
-    <>
+    <div className="wholesite">
       <Header onReset={resetChat} />
       {messages.length === 0 ? (
         <EmptyChat onPick={sendMessage} />
       ) : (
         <ChatWindow messages={messages} />
       )}
-      <div className="fullChat">
-        <ChatInput onSend={sendMessage} />
-      </div>
-    </>
+      <hr className="divider" />
+      <ChatInput onSend={sendMessage} />
+    </div>
   );
 }
 
