@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from pydantic import BaseModel
 from config import settings
 app = FastAPI(
     title="Conaobiad API",
@@ -17,6 +18,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+class ChatRequest(BaseModel):
+    message: str
+
+class ChatResponse(BaseModel):
+    reply: str
+@app.post("/chat", response_model=ChatResponse)
+def chat(request: ChatRequest):
+    #request.message skladniki od uzytkownika
+    return {"reply": "..."}
 
 if __name__ == "__main__":
     import uvicorn

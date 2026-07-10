@@ -8,20 +8,28 @@ import { useState } from "react";
 function App() {
   const [messages, setMessages] = useState([]);
 
-  function sendMessage(text) {
+  async function sendMessage(text) {
     if (text.trim() === "") return;
+
     const userMessage = { id: crypto.randomUUID(), sender: "user", text: text };
     setMessages((prev) => [...prev, userMessage]);
 
     // TODO: ZMIENIC WIADOMOSC BOTA NA PRAWDZIWA PO ZROBIENIU BACKENDU
+    const response = await fetch("http://localhost:8000/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text }),
+    });
+
+    const data = await response.json();
+
     const botMessage = {
       id: crypto.randomUUID(),
       sender: "bot",
-      text: "Ooh, smakowite typy — zaraz coś wymyślę!",
+      text: data.reply,
     };
-    setTimeout(() => {
-      setMessages((prev) => [...prev, botMessage]);
-    }, 500);
+
+    setMessages((prev) => [...prev, botMessage]);
   }
 
   function resetChat() {
