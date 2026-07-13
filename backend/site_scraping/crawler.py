@@ -3,7 +3,45 @@ import json
 from bs4 import BeautifulSoup
 already_scraped = set()
 
-def find_recipe_links(category_url, domain, pages=3):
+NUTRITION_MAP = {
+    "Wartość energetyczna": "calories",
+    "Węglowodany": "carbs",
+    "- W tym cukry": "sugar",
+    "Białko": "protein",
+    "Tłuszcze": "fat",
+}
+
+def get_value(soup, label):
+    strong = soup.find("strong", string=lambda t: t and label in t)
+    if not strong:
+        return ""
+
+    nxt = strong.next_sibling
+    if isinstance(nxt, str) and nxt.strip():
+        return nxt.strip()
+
+    sib = strong.find_next_sibling()
+    return sib.get_text(" ", strip=True) if sib else ""
+
+def get_diet(soup):
+    strong = soup.find("strong", string=lambda t: t and "Dieta" in t)
+    if not strong:
+        return ""
+    full = strong.parent.get_text(" ", strip=True)
+    return full.split("Dieta:")[-1].strip() if "Dieta:" in full else ""
+
+def get_nutrition(soup):
+    nutrition = {}
+    for lab in soup.select("span.nutrition-label"):
+        val = lab.find_next_sibling()
+        if not val:
+            continue
+        raw = lab.get_text(strip=True)
+        key = NUTRITION_MAP.get(raw, raw)
+        nutrition[key] = val.get_text(strip=True)
+    return nutrition
+
+def find_recipe_links(category_url, domain, pages=50):
     global already_scraped
     found_links = set()
 
@@ -17,7 +55,7 @@ def find_recipe_links(category_url, domain, pages=3):
             'Accept-Language': 'pl-PL,pl;q=0.9,en-US;q=0.8,en;q=0.7'
         }
 
-        response = requests.get(category_url, headers=headers)
+        response = requests.get(url, headers=headers)
         soup = BeautifulSoup(response.content, 'html.parser')
 
         for link in soup.find_all('a', href=True):
@@ -32,7 +70,7 @@ def find_recipe_links(category_url, domain, pages=3):
 
         print(f"Found {len(found_links)} links to recipes!")
 
-    new_links = list(found_links)[:5]
+    new_links = list(found_links)[:15]
     already_scraped.update(new_links)
     return new_links
 
@@ -70,6 +108,7 @@ def extract_recipe_data(url):
 
                 instr = recipe_data.get('recipeInstructions', [])
                 instr_str = ""
+
                 if isinstance(instr, list):
                     for step in instr:
                         if isinstance(step, dict) and 'text' in step:
@@ -79,6 +118,11 @@ def extract_recipe_data(url):
                 else:
                     instr_str = str(instr)
 
+                print(recipe_data.keys())
+                print("czas:", recipe_data.get('totalTime'))
+                print("porcje:", recipe_data.get('recipeYield'))
+                print("dieta:", recipe_data.get('suitableForDiet'))
+                print("odżywcze:", recipe_data.get('nutrition'))
                 return {"title": title, "ingredients": ing_str, "instructions": instr_str, "url": url}
         except:
             continue
@@ -98,7 +142,6 @@ def extract_recipe_data(url):
         clean_header = header.text.replace('[', '').replace(']', '').replace('więcej', '').strip()
         items = []
 
-        # Skipping ads and other unnecessary stuff
         curr = header.next_sibling
         for _ in range(5):
             if curr is None: break
@@ -127,7 +170,6 @@ def extract_recipe_data(url):
                 if text and text.lower() != 'składniki' and text not in ingredients_list:
                     temp_ingredients.append(text)
 
-        # Saving if found anything
         if temp_ingredients:
             header_text = f"\n--- {clean_header} ---"
             if header_text not in ingredients_list:
@@ -157,18 +199,30 @@ def extract_recipe_data(url):
                             break
                         if sibling.name == 'p':
                             text = sibling.get_text(strip=True)
-                            if text and len(text) > 30:  # pomijaj krótkie teksty
+                            if text and len(text) > 30:
                                 instructions_list.append(text)
                     if instructions_list:
                         break
 
         instr_str = "\n".join(instructions_list) if instructions_list else "Brak."
 
+        time_val = get_value(soup, "Czas przygotowania")
+        cooking_time = get_value(soup, "Czas gotowania")
+        servings = get_value(soup, "Liczba porcji")
+        diet = get_diet(soup)
+        nutrition = get_nutrition(soup)
+
         return {
             "title": title,
             "ingredients": final_ingredients,
             "instructions": instr_str,
-            "url": url
+            "url": url,
+            "time": time_val,
+            "cooking_time": cooking_time,
+            "servings": servings,
+            "diet": diet,
+            "nutrition": nutrition,
         }
 
     raise Exception("No standard, couldn't find any recipes!")
+

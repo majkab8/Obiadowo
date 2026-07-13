@@ -9,6 +9,7 @@ ENV_PATH = ROOT_DIR / ".env"
 class Settings(BaseSettings):
     GEMINI_API_KEY: str
     PINECONE_API_KEY: str
+    HF_TOKEN: str
     ALLOWED_ORIGINS: str = ""
 
     @field_validator("ALLOWED_ORIGINS")

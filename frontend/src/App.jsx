@@ -26,7 +26,7 @@ function App() {
     const botMessage = {
       id: crypto.randomUUID(),
       sender: "bot",
-      text: data.reply,
+      recipe: data,
     };
 
     setMessages((prev) => [...prev, botMessage]);

@@ -5,7 +5,12 @@ function ChatWindow({ messages }) {
     <div className="chatwindow">
       <div className="chatwindow-messages">
         {messages.map((m) => (
-          <ChatMessage key={m.id} sender={m.sender} message={m.text} />
+          <ChatMessage
+            key={m.id}
+            sender={m.sender}
+            message={m.text}
+            recipe={m.recipe}
+          />
         ))}
       </div>
     </div>
