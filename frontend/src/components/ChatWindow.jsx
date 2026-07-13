@@ -1,6 +1,14 @@
 import ChatMessage from "./ChatMessage.jsx";
+import TypingIndicator from "./TypingIndicator.jsx";
+import { useEffect, useRef } from "react";
 
-function ChatWindow({ messages }) {
+function ChatWindow({ messages, loading }) {
+  const bottomRef = useRef(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading]);
+
   return (
     <div className="chatwindow">
       <div className="chatwindow-messages">
@@ -12,6 +20,8 @@ function ChatWindow({ messages }) {
             recipe={m.recipe}
           />
         ))}
+        {loading && <TypingIndicator />}
+        <div ref={bottomRef} />
       </div>
     </div>
   );

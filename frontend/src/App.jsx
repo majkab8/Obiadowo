@@ -7,6 +7,7 @@ import { useState } from "react";
 
 function App() {
   const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   async function sendMessage(text) {
     if (text.trim() === "") return;
@@ -14,22 +15,27 @@ function App() {
     const userMessage = { id: crypto.randomUUID(), sender: "user", text: text };
     setMessages((prev) => [...prev, userMessage]);
 
-    // TODO: ZMIENIC WIADOMOSC BOTA NA PRAWDZIWA PO ZROBIENIU BACKENDU
-    const response = await fetch("http://localhost:8000/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: text }),
-    });
+    setLoading(true);
+    try {
+      const response = await fetch("http://localhost:8000/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text }),
+      });
+      if (!response.ok) throw new Error("Network response was not ok");
+      const data = await response.json();
 
-    const data = await response.json();
-
-    const botMessage = {
-      id: crypto.randomUUID(),
-      sender: "bot",
-      recipe: data,
-    };
-
-    setMessages((prev) => [...prev, botMessage]);
+      const botMessage = {
+        id: crypto.randomUUID(),
+        sender: "bot",
+        recipe: data,
+      };
+      setMessages((prev) => [...prev, botMessage]);
+    } catch (error) {
+      console.error("Fetch error:", error);
+    } finally {
+      setLoading(false);
+    }
   }
 
   function resetChat() {
@@ -42,7 +48,7 @@ function App() {
       {messages.length === 0 ? (
         <EmptyChat onPick={sendMessage} />
       ) : (
-        <ChatWindow messages={messages} />
+        <ChatWindow messages={messages} loading={loading} />
       )}
       <hr className="divider" />
       <ChatInput onSend={sendMessage} />
