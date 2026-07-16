@@ -4,3 +4,7 @@ venv/
 .idea/
 __pycache__/
 *.pyc
+node_modules/
+recipes.json
+recipes_clean.json
+*.jsonl

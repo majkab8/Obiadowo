@@ -2,20 +2,17 @@ import os
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from langchain_huggingface import HuggingFaceEmbeddings
 from pydantic import BaseModel, Field
 from config import settings
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
-from langchain_huggingface import HuggingFaceEndpoint, ChatHuggingFace
-from langchain_core.output_parsers import PydanticOutputParser
-
+from model import generate_steps_and_tips
 
 os.environ["PINECONE_API_KEY"] = settings.PINECONE_API_KEY
-os.environ["GOOGLE_API_KEY"] = settings.GEMINI_API_KEY
 
-embeddings = GoogleGenerativeAIEmbeddings(
-    model="gemini-embedding-001",
-    output_dimensionality=768
+embeddings = HuggingFaceEmbeddings(
+    model_name="sentence-transformers/paraphrase-multilingual-mpnet-base-v2",
+    model_kwargs={"device": "cuda"},
 )
 
 vector_store = PineconeVectorStore.from_existing_index(
@@ -41,14 +38,6 @@ app.add_middleware(
 class ChatRequest(BaseModel):
     message: str
 
-llm_endpoint = HuggingFaceEndpoint(
-    repo_id="Qwen/Qwen2.5-7B-Instruct",
-    task="text-generation",
-    max_new_tokens=1024,
-    huggingfacehub_api_token=settings.HF_TOKEN,
-    temperature=0.3
-)
-
 class Recipe(BaseModel):
     title: str = Field(description="Nazwa dania")
     time: str = Field(description="Czas wykonania, np. '30 min'")
@@ -63,10 +52,6 @@ class Recipe(BaseModel):
     ingredients: list[str] = Field(description="Lista składników")
     steps: list[str] = Field(description="Kroki przygotowania, po kolei")
     tip: str = Field(default="", description="Wskazówka")
-
-class RecipeAIExtras(BaseModel):
-    steps: list[str]
-    tip: str
 
 def doc_to_recipe(doc):
     m = doc.metadata
@@ -87,26 +72,15 @@ def doc_to_recipe(doc):
         ingredients=ingredients,
         steps=steps,
     )
-
-llm = ChatHuggingFace(llm=llm_endpoint)
-parser = PydanticOutputParser(pydantic_object=RecipeAIExtras)
 @app.post("/chat", response_model=Recipe)
 def chat(request: ChatRequest):
     results = vector_store.similarity_search(request.message, k=1)
     context = "\n\n".join(doc.page_content for doc in results)
-    prompt =f"""Jesteś polskim pomocnym kucharzem. Odpowiadaj wyłącznie po polsku. Użytkownik ma składniki: {request.message}
-
-To przepis z bazy:
-{context}
-
-Przepisz kroki własnymi słowami, krócej (nie kopiuj dosłownie) i dodaj krótką wskazówkę, jak wpleść jego składniki, które zostały. Kroki i wskazówka muszą być po polsku. Nie używaj innych języków.
-{parser.get_format_instructions()}"""
-
     recipe = doc_to_recipe(results[0])
-    response = llm.invoke(prompt)
-    out = parser.parse(response.content)
-    recipe.steps = out.steps
-    recipe.tip = out.tip
+    extras = generate_steps_and_tips(context, request.message)
+    recipe.steps = extras.steps
+    recipe.tip = extras.tip
+
     return recipe
 
 if __name__ == "__main__":

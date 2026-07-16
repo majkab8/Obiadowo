@@ -1,20 +1,20 @@
+import json
 import os
 from dotenv import load_dotenv
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_pinecone import PineconeVectorStore
 from site_scraper import download_recipes
 from cleaning_text import clean_recipe_text
 
 load_dotenv()
-os.environ["GOOGLE_API_KEY"] = os.environ["GEMINI_API_KEY"]
 INDEX_NAME = "recipes-index"
 
 if "PINECONE_API_KEY" not in os.environ:
     print("PINECONE_API_KEY not set in .env file")
 
-embeddings = GoogleGenerativeAIEmbeddings(
-    model="gemini-embedding-001",
-    output_dimensionality=768
+embeddings = HuggingFaceEmbeddings(
+    model_name="sentence-transformers/paraphrase-multilingual-mpnet-base-v2",
+    model_kwargs={"device": "cuda"},
 )
 
 def upload_recipes_to_pinecone(scraped_recipes):
@@ -65,5 +65,7 @@ if __name__ == "__main__":
     category_url = "https://aniagotuje.pl/pomysl-na/obiad"
     domain = "https://aniagotuje.pl"
 
-    recipes = download_recipes(category_url, domain)
+    with open("recipes.json", encoding="utf-8") as f:
+        recipes = json.load(f)
+    print(f"Loaded {len(recipes)} recipes")
     upload_recipes_to_pinecone(recipes)

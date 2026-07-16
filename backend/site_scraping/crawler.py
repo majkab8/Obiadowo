@@ -46,7 +46,7 @@ def find_recipe_links(category_url, domain, pages=50):
     found_links = set()
 
     for page in range(1, pages + 1):
-        url = f"{category_url}?page={page}" if page > 1 else category_url
+        url = f"{category_url}/strona/{page}" if page > 1 else category_url
         print(f"Searching for recipes on page {page}: {url}")
 
         headers = {
@@ -70,7 +70,7 @@ def find_recipe_links(category_url, domain, pages=50):
 
         print(f"Found {len(found_links)} links to recipes!")
 
-    new_links = list(found_links)[:15]
+    new_links = list(found_links)[:300]
     already_scraped.update(new_links)
     return new_links
 
