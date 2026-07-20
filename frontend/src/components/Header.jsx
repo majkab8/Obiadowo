@@ -7,7 +7,7 @@ function Header({ onReset }) {
         <LogoIcon />
       </div>
       <div className="header-text">
-        <h2>Co na obiad?</h2>
+        <h2>Obiadowo</h2>
       </div>
       <button className="header-button" onClick={onReset}>
         Nowy czat
