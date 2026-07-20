@@ -1,4 +1,6 @@
 import os
+
+import torch
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,9 +12,11 @@ from model import generate_steps_and_tips
 
 os.environ["PINECONE_API_KEY"] = settings.PINECONE_API_KEY
 
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
 embeddings = HuggingFaceEmbeddings(
     model_name="sentence-transformers/paraphrase-multilingual-mpnet-base-v2",
-    model_kwargs={"device": "cuda"},
+    model_kwargs={"device": device},
 )
 
 vector_store = PineconeVectorStore.from_existing_index(
@@ -75,12 +79,11 @@ def doc_to_recipe(doc):
 @app.post("/chat", response_model=Recipe)
 def chat(request: ChatRequest):
     results = vector_store.similarity_search(request.message, k=1)
-    context = "\n\n".join(doc.page_content for doc in results)
     recipe = doc_to_recipe(results[0])
-    extras = generate_steps_and_tips(context, request.message)
+    m = results[0].metadata
+    extras = generate_steps_and_tips(m["title"], m["ingredients"], m["instructions"])
     recipe.steps = extras.steps
     recipe.tip = extras.tip
-
     return recipe
 
 if __name__ == "__main__":

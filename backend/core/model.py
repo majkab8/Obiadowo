@@ -1,33 +1,45 @@
-from langchain_core.output_parsers import PydanticOutputParser
-from langchain_huggingface import HuggingFaceEndpoint, ChatHuggingFace
+import json
+from pathlib import Path
+import torch
 from pydantic import BaseModel
-from config import settings
+from transformers import AutoTokenizer, AutoModelForCausalLM
 
-llm_endpoint = HuggingFaceEndpoint(
-    repo_id="Qwen/Qwen2.5-7B-Instruct",
-    task="text-generation",
-    max_new_tokens=1024,
-    huggingfacehub_api_token=settings.HF_TOKEN,
-    temperature=0.3
-)
+device = "cuda" if torch.cuda.is_available() else "cpu"
+path = "Mijuub/conaobiad-polka"
+model = AutoModelForCausalLM.from_pretrained(path, dtype=torch.bfloat16)
+tokenizer = AutoTokenizer.from_pretrained(path)
 
 class RecipeAIExtras(BaseModel):
     steps: list[str]
     tip: str
 
-llm = ChatHuggingFace(llm=llm_endpoint)
-parser = PydanticOutputParser(pydantic_object=RecipeAIExtras)
+def generate_steps_and_tips(title, ingredients, instructions):
+    prompt = f"""Oto przepis:
 
-def generate_steps_and_tips(context, ingredients):
-    prompt = f"""Jesteś polskim pomocnym kucharzem. Odpowiadaj wyłącznie po polsku. Użytkownik ma składniki: {ingredients}
+Tytuł: {title}
 
-    To przepis z bazy:
-    {context}
+Składniki: {ingredients}
 
-    Przepisz kroki własnymi słowami, krócej (nie kopiuj dosłownie) i dodaj krótką wskazówkę, jak wpleść jego składniki, które zostały. Kroki i wskazówka muszą być po polsku. Nie używaj innych języków.
-    {parser.get_format_instructions()}"""
+Instrukcje (mogą być chaotyczne i powtórzone):
+{instructions}
 
-    response = llm.invoke(prompt)
-    out = parser.parse(response.content)
+Przepisz kroki własnymi słowami, krótko i po kolei uwzględniając ważne szczegóły.
+Na końcu dodaj jedną krótką wskazówkę. Odpowiadaj wyłącznie po polsku. Odpowiedz wyłącznie w formacie JSON, bez dodatkowego tekstu i bez ```:
+{{"steps": ["pierwszy krok", "drugi krok"], "tip": "krótka wskazówka"}}"""
 
-    return out
+    messages = [
+        {"role": "system", "content": "Jesteś pomocnym polskim kucharzem. Odpowiadasz wyłącznie po polsku."},
+        {"role": "user", "content": prompt},
+    ]
+
+    model_inputs = tokenizer.apply_chat_template(messages, add_generation_prompt=True, return_tensors="pt",
+                                                 return_dict=True).to(device)
+    generated_ids = model.generate(**model_inputs, max_new_tokens=512, do_sample=False)
+
+    input_len = model_inputs["input_ids"].shape[-1]
+    answer = tokenizer.decode(generated_ids[0][input_len:], skip_special_tokens=True)
+    start = answer.find("{")
+    end = answer.rfind("}") + 1
+    data = json.loads(answer[start:end])
+
+    return RecipeAIExtras(**data)

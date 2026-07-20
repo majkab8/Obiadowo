@@ -8,3 +8,5 @@ node_modules/
 recipes.json
 recipes_clean.json
 *.jsonl
+polka-lora/
+polka-merged/
