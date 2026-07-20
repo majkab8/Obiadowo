@@ -19,8 +19,8 @@ function EmptyChat({ onPick }) {
       </div>
       <div className="emptychat-text">
         <p>
-          Napisz jakie składniki masz, a ja spróbuje zaproponować Ci co możesz z
-          nich upichcić!
+          Napisz jakie składniki masz, a ja spróbuje Tobie zaproponować co
+          możesz z nich upichcić!
         </p>
       </div>
       <div className="emptychat-suggestions">

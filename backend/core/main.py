@@ -14,6 +14,8 @@ os.environ["PINECONE_API_KEY"] = settings.PINECONE_API_KEY
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
+cache = {}
+
 embeddings = HuggingFaceEmbeddings(
     model_name="sentence-transformers/paraphrase-multilingual-mpnet-base-v2",
     model_kwargs={"device": device},
@@ -78,12 +80,16 @@ def doc_to_recipe(doc):
     )
 @app.post("/chat", response_model=Recipe)
 def chat(request: ChatRequest):
+    key = request.message.strip().lower()
+    if key in cache:
+        return cache[key]
     results = vector_store.similarity_search(request.message, k=1)
     recipe = doc_to_recipe(results[0])
     m = results[0].metadata
     extras = generate_steps_and_tips(m["title"], m["ingredients"], m["instructions"])
     recipe.steps = extras.steps
     recipe.tip = extras.tip
+    cache[key] = recipe
     return recipe
 
 if __name__ == "__main__":
