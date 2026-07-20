@@ -1,5 +1,6 @@
 * {
   font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  box-sizing: border-box;
 }
 
 :root {
@@ -26,6 +27,7 @@ body {
   flex-direction: column;
   background-color: var(--background);
   height: 100vh;
+  overflow: hidden;
 }
 
 .header,
@@ -449,4 +451,18 @@ body {
 @keyframes bounce {
   0%, 60%, 100% { transform: translateY(0);   opacity: 0.4; }
   30%           { transform: translateY(-4px); opacity: 1;   }
+}
+
+@media (max-width: 600px) {
+  .wholesite {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .message,
+  .recipe-card {
+    max-width: 90%;
+  }
+  .chatwindow-messages {
+    padding: 12px;
+  }
 }
