@@ -86,6 +86,10 @@ body {
   gap: 12px;
 }
 
+.emptychat-header {
+  text-align: center;
+}
+
 .emptychat-header h1,
 .emptychat-text p,
 .recipe-card-title h3 {
