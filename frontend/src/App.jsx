@@ -8,6 +8,7 @@ import { useState } from "react";
 function App() {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
   async function sendMessage(text) {
     if (text.trim() === "") return;
@@ -17,7 +18,7 @@ function App() {
 
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:8000/chat", {
+      const response = await fetch(`${API_URL}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: text }),
