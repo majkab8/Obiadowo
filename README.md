@@ -10,13 +10,13 @@ _(free-tier CPU hosting — the first request after the app has been idle may ta
 
 ---
 
-## ✨ What it does
+## What it does
 - 💬 **Chat interface** — describe the ingredients you have (in Polish)
 - 🔎 **RAG** over ~200 real recipes scraped
 - 🧾 **Rich recipe card** — title, time, servings, diet tags, calories, a macronutrient bar, ingredients, numbered steps, and a tip
 - 🤖 Steps & tip written by **a custom fine-tuned Polish model**
 
-## 🌟 The highlight: my own fine-tuned model
+## The highlight: my own fine-tuned model
 General-purpose models write clumsy Polish. Instead of relying on one, I trained my own small Polish model via **knowledge distillation**:
 
 - **Teacher** — [`Bielik-11B-v3.0-Instruct`](https://huggingface.co/speakleash): used offline to generate a 212-example dataset of clean, reworded recipe steps + tips (as JSON).
@@ -29,7 +29,7 @@ The result: correct Polish from a model small enough to self-host.
 | ❌ Generic model (Qwen) | _"Wgrzebaj cebulę… gotuj 15 minut na pomidziłku"_ — invented words, broken grammar |
 | ✅ polka (fine-tuned) | _"Podsmaż cebulę i czosnek na oliwie przez ok. 10 minut"_ — correct, clean Polish |
 
-## 🏗️ Architecture
+## Architecture
 ```
 React (Vite)              FastAPI                  Pinecone
   Vercel      ──POST /chat──▶  HF Spaces  ──search──▶  (recipe DB)
@@ -40,14 +40,14 @@ React (Vite)              FastAPI                  Pinecone
 3. Backend returns a structured `Recipe` (JSON) → frontend renders the card.
 4. A simple **in-memory cache** returns repeated queries instantly.
 
-## 🔧 Tech stack
+## Tech stack
 - **Frontend:** React, Vite, Chart.js (macro bar) — deployed on **Vercel**
 - **Backend:** FastAPI — deployed on **Hugging Face Spaces** (Docker)
 - **RAG:** `sentence-transformers/paraphrase-multilingual-mpnet-base-v2` (local embeddings) + **Pinecone**
 - **Model:** Bielik-1.5B fine-tuned with **LoRA** (peft, trl, transformers)
 - **Scraping:** BeautifulSoup
 
-## 🚀 Run locally
+## Run locally
 ### Backend
 ```bash
 cd backend
@@ -70,7 +70,7 @@ npm install
 npm run dev
 ```
 
-## 🧪 Reproduce the model pipeline
+## Reproduce the model pipeline
 Scripts live in `backend/site_scraping/` and `backend/fine_tuning/`:
 1. `save_recipes.py` — scrape recipes → `recipes.json`
 2. `filter_recipes.py` — drop empty/invalid ones → `recipes_clean.json`
@@ -78,10 +78,18 @@ Scripts live in `backend/site_scraping/` and `backend/fine_tuning/`:
 4. `finetune.py` — LoRA fine-tune Bielik-1.5B on the dataset
 5. `merge_polka.py` — merge the LoRA adapter into a standalone model → push to the HF Hub
 
-## ⚠️ Known limitations & future work
+## Known limitations & future work
 - **Cold start:** free CPU hosting makes the first request after idle slow (container wake-up + generation).
 - **Tips:** occasionally generic — a small model has its limits. Planned: better distillation targets for the tip.
 - **Planned feature:** a copyable shopping list ("what am I missing for this recipe?").
 
-## 🙏 Acknowledgements
+## Acknowledgements
 - **[Bielik](https://huggingface.co/speakleash) / SpeakLeash** — the base Polish models (teacher & student).
+
+## Contact
+
+Maja Bednarek
+
+- GitHub: [majkab8](https://github.com/majkab8)
+- Email: [bednarekmaja02@gmail.com]
+- LinkedIn: [https://www.linkedin.com/in/maja-bednarek-599119324/]
