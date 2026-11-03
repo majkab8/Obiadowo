@@ -11,14 +11,12 @@ _(free-tier CPU hosting — the first request after the app has been idle may ta
 ---
 
 ## What it does
-
 - 💬 **Chat interface** — describe the ingredients you have (in Polish)
 - 🔎 **RAG** over ~200 real recipes scraped from aniagotuje.pl
 - 🧾 **Rich recipe card** — title, time, servings, diet tags, calories, a macronutrient bar, ingredients, numbered steps, and a tip
 - 🤖 Steps & tip written by **a custom fine-tuned Polish model**
 
 ## The highlight: my own fine-tuned model
-
 General-purpose models write clumsy Polish. Instead of relying on one, I trained my own small Polish model via **knowledge distillation**:
 
 - **Teacher** — [`Bielik-11B-v3.0-Instruct`](https://huggingface.co/speakleash): used offline to generate a 212-example dataset of clean, reworded recipe steps + tips (as JSON).
@@ -45,7 +43,6 @@ React (Vite)              FastAPI                  Pinecone
 4. A simple **in-memory cache** returns repeated queries instantly.
 
 ## Tech stack
-
 - **Frontend:** React, Vite, Chart.js (macro bar) — deployed on **Vercel**
 - **Backend:** FastAPI — deployed on **Hugging Face Spaces** (Docker)
 - **RAG:** `sentence-transformers/paraphrase-multilingual-mpnet-base-v2` (local embeddings) + **Pinecone**
@@ -53,7 +50,6 @@ React (Vite)              FastAPI                  Pinecone
 - **Scraping:** BeautifulSoup
 
 ## Run locally
-
 ### Backend
 
 ```bash
@@ -80,7 +76,6 @@ npm run dev
 ```
 
 ## Reproduce the model pipeline
-
 Scripts live in `backend/site_scraping/` and `backend/fine_tuning/`:
 
 1. `save_recipes.py` — scrape recipes → `recipes.json`
@@ -91,7 +86,6 @@ Scripts live in `backend/site_scraping/` and `backend/fine_tuning/`:
 5. `merge_polka.py` — merge the LoRA adapter into a standalone model → push to the HF Hub
 
 ## Known limitations & future work
-
 - **Cold start:** free CPU hosting makes the first request after idle slow (container wake-up + generation).
 - **Tips:** occasionally generic — a small model has its limits. Planned: better distillation targets for the tip.
 - **Planned feature:** a copyable shopping list ("what am I missing for this recipe?").
