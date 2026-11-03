@@ -175,6 +175,11 @@ body {
   color: var(--icon-muted);
 }
 
+.chatinput-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .chatwindow {
   flex: 1;
   overflow-y: auto;

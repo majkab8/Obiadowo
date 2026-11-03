@@ -52,7 +52,7 @@ function App() {
         <ChatWindow messages={messages} loading={loading} />
       )}
       <hr className="divider" />
-      <ChatInput onSend={sendMessage} />
+      <ChatInput onSend={sendMessage} loading={loading} />
     </div>
   );
 }

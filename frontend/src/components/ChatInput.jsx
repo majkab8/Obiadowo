@@ -1,13 +1,15 @@
 import { ArrowUpIcon } from "../icons/Icons.jsx";
 import { useState } from "react";
 
-function ChatInput({ onSend }) {
+function ChatInput({ onSend, loading }) {
   const [text, setText] = useState("");
 
   function handleSubmit(e) {
     e.preventDefault();
-    if (text.trim() === "") return;
-    onSend(text);
+    if (loading) return;
+    const trimmed = text.trim();
+    if (trimmed === "") return;
+    onSend(trimmed);
     setText("");
   }
 
